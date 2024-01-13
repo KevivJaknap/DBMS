@@ -79,7 +79,52 @@ OpenRelTable::OpenRelTable() {
     curr->next = nullptr;
     AttrCacheTable::attrCache[ATTRCAT_RELID] = head;
     curr = AttrCacheTable::attrCache[ATTRCAT_RELID];
-    // verified
+
+    struct HeadInfo headInfo;
+    relCatBlock.getHeader(&headInfo);
+    int numRecs = headInfo.numEntries;
+    for(int i=0; i < numRecs; i++){
+        relCatBlock.getRecord(relCatRecord, i);
+        struct RelCacheEntry relCacheEntry;
+        if(!strcmp(relCatRecord[RELCAT_REL_NAME_INDEX].sVal, "Students")){
+            RelCacheTable::recordToRelCatEntry(relCatRecord, &relCacheEntry.relCatEntry);
+            relCacheEntry.recId.block = RELCAT_BLOCK;
+            relCacheEntry.recId.slot = i;
+            RelCacheTable::relCache[2] = (struct RelCacheEntry*)malloc(sizeof(struct RelCacheEntry));
+            *(RelCacheTable::relCache[2]) = relCacheEntry;
+            break;        
+        }
+    }
+    //verified
+    struct HeadInfo attrHeadInfo;
+    int attrCatBlockNum = ATTRCAT_BLOCK;
+    AttrCacheEntry* dummy = (struct AttrCacheEntry*)malloc(sizeof(struct AttrCacheEntry));
+    dummy->next = nullptr;
+    AttrCacheTable::attrCache[2] = dummy;
+    do{
+        RecBuffer attrCatBlock(attrCatBlockNum);
+        attrCatBlock.getHeader(&attrHeadInfo);
+        numRecs = attrHeadInfo.numEntries;
+        for(int i=0; i < numRecs; i++){
+            attrCatBlock.getRecord(attrCatRecord, i);
+            struct AttrCacheEntry attrCacheEntry;
+            if(!strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal, "Students")){
+                AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &attrCacheEntry.attrCatEntry);
+                attrCacheEntry.recId.block = attrCatBlockNum;
+                attrCacheEntry.recId.slot = i;
+                dummy->next = (struct AttrCacheEntry*)malloc(sizeof(struct AttrCacheEntry));
+                *(dummy->next) = attrCacheEntry;
+                dummy = dummy->next;
+            }
+        }
+        attrCatBlockNum = attrHeadInfo.rblock;
+    }while(attrHeadInfo.rblock != -1);
+    dummy->next = nullptr;
+    dummy = AttrCacheTable::attrCache[2];
+    AttrCacheTable::attrCache[2] = dummy->next;
+    free(dummy);
+    //verified
+    
     // while(curr != nullptr){
     //     printf("%s\n", curr->attrCatEntry.attrName);
     //     curr = curr->next;

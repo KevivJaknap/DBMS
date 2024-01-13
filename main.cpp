@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
   Disk disk_run;
   StaticBuffer buffer;
   OpenRelTable cache;
-  for(int i=0;i<2;i++){
+  for(int i=0;i<3;i++){
     RelCatEntry* relCatBuf = (RelCatEntry*)malloc(sizeof(RelCatEntry));
     RelCacheTable::getRelCatEntry(i, relCatBuf);
     printf("Relation: %s\n", relCatBuf->relName);
