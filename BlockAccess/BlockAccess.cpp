@@ -41,6 +41,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
 
        if(slot > numSlots){
         block = head.rblock;
+        slot=0;
         continue;
        }
 
