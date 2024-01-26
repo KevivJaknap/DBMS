@@ -72,50 +72,6 @@ OpenRelTable::OpenRelTable() {
     }
     dummy2->next = nullptr;
     AttrCacheTable::attrCache[ATTRCAT_RELID] = head2->next;
-    // struct AttrCacheEntry* curr;
-    // struct AttrCacheEntry* head;
-    // attrCatBlock.getRecord(attrCatRecord, 0);
-    // struct AttrCacheEntry attrCacheEntry;
-    // AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &attrCacheEntry.attrCatEntry);
-    // attrCacheEntry.recId.block = ATTRCAT_BLOCK;
-    // attrCacheEntry.recId.slot = 0;
-    // head = (struct AttrCacheEntry*)malloc(sizeof(struct AttrCacheEntry));
-    // *head = attrCacheEntry;
-    // curr = head;
-    // for(int i = 1; i < 6; i++){
-    //     attrCatBlock.getRecord(attrCatRecord, i);
-    //     struct AttrCacheEntry attrCacheEntry;
-    //     AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &attrCacheEntry.attrCatEntry);
-    //     attrCacheEntry.recId.block = ATTRCAT_BLOCK;
-    //     attrCacheEntry.recId.slot = i;
-    //     curr->next = (struct AttrCacheEntry*)malloc(sizeof(struct AttrCacheEntry));
-    //     *(curr->next) = attrCacheEntry;
-    //     curr = curr->next;
-    // }
-    // curr->next = nullptr;
-    // AttrCacheTable::attrCache[RELCAT_RELID] = head;
-    // curr = AttrCacheTable::attrCache[RELCAT_RELID];
-    //verified
-    // attrCatBlock.getRecord(attrCatRecord, 6);
-    // AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &attrCacheEntry.attrCatEntry);
-    // attrCacheEntry.recId.block = ATTRCAT_BLOCK;
-    // attrCacheEntry.recId.slot = 6;
-    
-    // head = (struct AttrCacheEntry*)malloc(sizeof(struct AttrCacheEntry));
-    // *head = attrCacheEntry;
-    // curr = head;
-    // for(int i = 7; i < 12; i++){
-    //     attrCatBlock.getRecord(attrCatRecord, i);
-    //     struct AttrCacheEntry attrCacheEntry;
-    //     AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &attrCacheEntry.attrCatEntry);
-    //     attrCacheEntry.recId.block = ATTRCAT_BLOCK;
-    //     attrCacheEntry.recId.slot = i;
-    //     curr->next = (struct AttrCacheEntry*)malloc(sizeof(struct AttrCacheEntry));
-    //     *(curr->next) = attrCacheEntry;
-    //     curr = curr->next;
-    // }
-    // curr->next = nullptr;
-    // AttrCacheTable::attrCache[ATTRCAT_RELID] = head;
 }
 
 int OpenRelTable::openRel(char relName[ATTR_SIZE]){
@@ -184,13 +140,6 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE]){
     }
     dummy->next = nullptr;
     AttrCacheTable::attrCache[relId] = listHead->next;
-    //debug print
-    listHead = AttrCacheTable::attrCache[relId];
-    while(listHead){
-        // printf("%s \n", listHead->attrCatEntry.attrName);
-        listHead = listHead->next;
-    }
-    free(listHead);
 
     OpenRelTable::tableMetaInfo[relId].free = false;
     strcpy(OpenRelTable::tableMetaInfo[relId].relName, relName);
@@ -239,11 +188,13 @@ int OpenRelTable::getFreeOpenRelTableEntry(){
 
 OpenRelTable::~OpenRelTable() {
     for(int i=0;i < MAX_OPEN; i++){
-        if(RelCacheTable::relCache[i] != NULL){
+        if(RelCacheTable::relCache[i] != nullptr){
             free(RelCacheTable::relCache[i]);
+            RelCacheTable::relCache[i] = nullptr;
         }
-        if(AttrCacheTable::attrCache[i] != NULL){
+        if(AttrCacheTable::attrCache[i] != nullptr){
             free(AttrCacheTable::attrCache[i]);
+            AttrCacheTable::attrCache[i] = nullptr;
         }
     }
     //close all open relations from rel-id 2

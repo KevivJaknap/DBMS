@@ -14,7 +14,7 @@ StaticBuffer::StaticBuffer() {
 
 StaticBuffer::~StaticBuffer() {
     for(int i=0; i<BUFFER_CAPACITY; i++){
-        if(metainfo[i].dirty){
+        if(!metainfo[i].free && metainfo[i].dirty){
             Disk::writeBlock(blocks[i], metainfo[i].blockNum);
         }
     }
