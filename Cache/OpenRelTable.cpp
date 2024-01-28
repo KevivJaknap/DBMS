@@ -157,12 +157,45 @@ int OpenRelTable::closeRel(int relId){
     if(OpenRelTable::tableMetaInfo[relId].free){
         return E_RELNOTOPEN;
     }
-    //free the allocated memory
+    
+    //check if modified
+    if(RelCacheTable::relCache[relId]->dirty){
+        //get relation catalog entry
+        RelCatEntry relCatEntry = RelCacheTable::relCache[relId]->relCatEntry;
+        //initialize record
+        union Attribute relCatRecord[RELCAT_NO_ATTRS];
+        RelCacheTable::relCatEntryToRecord(&relCatEntry, relCatRecord);
+
+        //perform linear search to find the record in relation catalog
+        union Attribute relNameattr;
+        strcpy(relNameattr.sVal, relCatEntry.relName);
+        RecId relcatRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameattr, EQ);
+        if(relcatRecId.block == -1 && relcatRecId.slot == -1){
+            return E_RELNOTEXIST;
+        }
+
+        //declare an object of RecBuffer
+        RecBuffer relCatBlock(RELCAT_BLOCK);
+
+        //set the record in relation catalog
+        relCatBlock.setRecord(relCatRecord, relcatRecId.slot);
+    }
+
+    //free the relCacheEntry
     free(RelCacheTable::relCache[relId]);
     RelCacheTable::relCache[relId] = nullptr;
-    free(AttrCacheTable::attrCache[relId]);
+
+    //free the attrCacheEntry
+    struct AttrCacheEntry* dummy = AttrCacheTable::attrCache[relId];
+    while(dummy != nullptr){
+        struct AttrCacheEntry* temp = dummy;
+        dummy = dummy->next;
+        free(temp);
+    }
+
     AttrCacheTable::attrCache[relId] = nullptr;
 
+    //set openRelTable entry to free
     OpenRelTable::tableMetaInfo[relId].free = true;
     return SUCCESS;
 }

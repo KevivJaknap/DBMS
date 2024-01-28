@@ -53,7 +53,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             recBuffer.getRecord(rec, searchRes.slot);
             for(int i=0; i<relCatEntry.numAttrs; i++){
                 if(attrTypes[i] == NUMBER){
-                    printf(" %d |", (int)rec[i].nVal);
+                    printf(" %.2f |", rec[i].nVal);
                 }
                 else if(attrTypes[i] == STRING){
                     printf(" %s |", rec[i].sVal);
@@ -66,6 +66,58 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         }
     }
     return SUCCESS;
+}
+
+int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE]){
+    //check if relname is relation catalog or attribute catalog
+    bool checkRelName = !strcmp(relName, RELCAT_RELNAME) || !strcmp(relName, ATTRCAT_RELNAME);
+    if(checkRelName){
+        return E_NOTPERMITTED;
+    }
+
+    //get relId
+    int relId = OpenRelTable::getRelId(relName);
+    if(relId == E_RELNOTOPEN){
+        return E_RELNOTOPEN;
+    }
+
+    //get relation catalog entry of the relation
+    RelCatEntry* relCatEntry = (RelCatEntry*)malloc(sizeof(RelCatEntry));
+    RelCacheTable::getRelCatEntry(relId, relCatEntry);
+
+    //check if number of attributes match
+    if(relCatEntry->numAttrs != nAttrs){
+        return E_NATTRMISMATCH;
+    }
+
+    //declare record 
+    Attribute recordAttr[nAttrs];
+
+    //get attribute catalog entry of each attribute for type
+    for(int i=0; i<nAttrs; i++){
+        AttrCatEntry* attrCatEntry = (AttrCatEntry*)malloc(sizeof(AttrCatEntry));
+        AttrCacheTable::getAttrCatEntry(relId, i, attrCatEntry);
+        
+        int type = attrCatEntry->attrType;
+
+        if(type == NUMBER){
+            //check if record[i] can be converted to number
+            if(isNumber(record[i])){
+                recordAttr[i].nVal = atof(record[i]);
+            }
+            else{
+                return E_ATTRTYPEMISMATCH;
+            }
+        }
+        else if(type == STRING){
+            strcpy(recordAttr[i].sVal, record[i]);
+        }
+    }
+
+    //insert the record by calling BlockAccess::insert() function
+    int retVal = BlockAccess::insert(relId, recordAttr);
+
+    return retVal;
 }
 
 bool isNumber(char* str){
