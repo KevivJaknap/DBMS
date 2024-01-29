@@ -15,7 +15,9 @@ OpenRelTable::OpenRelTable() {
     //setting free=false for RELCAT_RELID and ATTRCAT_RELID
     OpenRelTable::tableMetaInfo[RELCAT_RELID].free = false;
     OpenRelTable::tableMetaInfo[ATTRCAT_RELID].free = false;
-
+    //setting name for relation catalog and attribute catalog
+    strcpy(OpenRelTable::tableMetaInfo[RELCAT_RELID].relName, RELCAT_RELNAME);
+    strcpy(OpenRelTable::tableMetaInfo[ATTRCAT_RELID].relName, ATTRCAT_RELNAME);
 
     RecBuffer relCatBlock(RELCAT_BLOCK);
 
@@ -200,6 +202,7 @@ int OpenRelTable::closeRel(int relId){
     OpenRelTable::tableMetaInfo[relId].free = true;
     return SUCCESS;
 }
+
 int OpenRelTable::getRelId(char relName[ATTR_SIZE]){
     for(int i=0; i < MAX_OPEN; i++){
         if(!strcmp(tableMetaInfo[i].relName, relName)){
@@ -208,8 +211,6 @@ int OpenRelTable::getRelId(char relName[ATTR_SIZE]){
     }
     return E_RELNOTOPEN;
 }
-
-
 
 int OpenRelTable::getFreeOpenRelTableEntry(){
     for(int i=0; i < MAX_OPEN; i++){
@@ -221,6 +222,12 @@ int OpenRelTable::getFreeOpenRelTableEntry(){
 }
 
 OpenRelTable::~OpenRelTable() {
+    //close all open relations from rel-id 2
+    for(int i=2; i < MAX_OPEN; i++){
+        if(!tableMetaInfo[i].free) {
+            OpenRelTable::closeRel(i);
+        }
+    }
     for(int i=0;i < MAX_OPEN; i++){
         if(RelCacheTable::relCache[i] != nullptr){
             free(RelCacheTable::relCache[i]);
@@ -229,12 +236,6 @@ OpenRelTable::~OpenRelTable() {
         if(AttrCacheTable::attrCache[i] != nullptr){
             free(AttrCacheTable::attrCache[i]);
             AttrCacheTable::attrCache[i] = nullptr;
-        }
-    }
-    //close all open relations from rel-id 2
-    for(int i=2; i < MAX_OPEN; i++){
-        if(!tableMetaInfo[i].free) {
-            OpenRelTable::closeRel(i);
         }
     }
 }

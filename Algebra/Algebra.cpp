@@ -127,6 +127,3 @@ bool isNumber(char* str){
     int ret = sscanf(str, "%f %n", &ignore, &len);
     return ret == 1 && len == strlen(str);
 }
-
-
-
