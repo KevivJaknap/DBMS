@@ -176,7 +176,7 @@ int BlockBuffer::setBlockType(int blockType){
     }
 
     // cast bufferPtr to type int32_t* and then assign blockType
-    *((int32_t*)bufferPtr) = blockType;
+    *((int32_t *)bufferPtr) = blockType;
 
     //update in blockAllocMap
     StaticBuffer::blockAllocMap[this->blockNum] = blockType;

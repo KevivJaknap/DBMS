@@ -24,8 +24,9 @@ StaticBuffer::StaticBuffer() {
 StaticBuffer::~StaticBuffer() {
     //copy blockAllocMap from buffer to disk
     for(int i=0; i<4; i++){
-        memcpy(blocks[i], blockAllocMap + i*BLOCK_SIZE, BLOCK_SIZE);
-        Disk::writeBlock(blocks[i], i);
+        unsigned char buffer[BLOCK_SIZE];
+        memcpy(buffer, blockAllocMap + i*BLOCK_SIZE, BLOCK_SIZE);
+        Disk::writeBlock(buffer, i);
     }
     
     for(int i=0; i<BUFFER_CAPACITY; i++){

@@ -167,6 +167,7 @@ int OpenRelTable::closeRel(int relId){
         RelCacheTable::relCatEntryToRecord(&relCatEntry, relCatRecord);
 
         //perform linear search to find the record in relation catalog
+        RelCacheTable::resetSearchIndex(RELCAT_RELID);
         union Attribute relNameattr;
         strcpy(relNameattr.sVal, relCatEntry.relName);
         RecId relcatRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameattr, EQ);
