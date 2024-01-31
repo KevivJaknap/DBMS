@@ -228,14 +228,56 @@ OpenRelTable::~OpenRelTable() {
             OpenRelTable::closeRel(i);
         }
     }
-    for(int i=0;i < MAX_OPEN; i++){
-        if(RelCacheTable::relCache[i] != nullptr){
-            free(RelCacheTable::relCache[i]);
-            RelCacheTable::relCache[i] = nullptr;
-        }
-        if(AttrCacheTable::attrCache[i] != nullptr){
-            free(AttrCacheTable::attrCache[i]);
-            AttrCacheTable::attrCache[i] = nullptr;
-        }
+    //checking if relCatentry of attribute catalog is modified
+    if (RelCacheTable::relCache[ATTRCAT_RELID]->dirty){
+        //get relation catalog entry
+        RelCatEntry relCatEntry = RelCacheTable::relCache[ATTRCAT_RELID]->relCatEntry;
+        //initialize record
+        union Attribute relCatRecord[RELCAT_NO_ATTRS];
+        RelCacheTable::relCatEntryToRecord(&relCatEntry, relCatRecord);
+
+        int blockNum = RELCAT_BLOCK;
+        int slotNum = RELCAT_SLOTNUM_FOR_ATTRCAT;
+
+        RecBuffer recBuffer(blockNum);
+        recBuffer.setRecord(relCatRecord, slotNum);
     }
+    //free the memory allocated to relCacheEntry of attribute catalog
+    free(RelCacheTable::relCache[ATTRCAT_RELID]);
+    RelCacheTable::relCache[ATTRCAT_RELID] = nullptr;
+
+    //release the relation catalog
+    if (RelCacheTable::relCache[RELCAT_RELID]->dirty){
+        //get relation catalog entry
+        RelCatEntry relCatEntry = RelCacheTable::relCache[RELCAT_RELID]->relCatEntry;
+        //initialize record
+        union Attribute relCatRecord[RELCAT_NO_ATTRS];
+        RelCacheTable::relCatEntryToRecord(&relCatEntry, relCatRecord);
+
+        int blockNum = RELCAT_BLOCK;
+        int slotNum = RELCAT_SLOTNUM_FOR_RELCAT;
+
+        RecBuffer recBuffer(blockNum);
+        recBuffer.setRecord(relCatRecord, slotNum);
+    }
+    //free the memory allocated to relCacheEntry of relation catalog
+    free(RelCacheTable::relCache[RELCAT_RELID]);
+    RelCacheTable::relCache[RELCAT_RELID] = nullptr;
+
+    //release the attribute catalog
+    struct AttrCacheEntry* dummy = AttrCacheTable::attrCache[RELCAT_RELID];
+    while(dummy != nullptr){
+        struct AttrCacheEntry* temp = dummy;
+        dummy = dummy->next;
+        free(temp);
+    }
+    AttrCacheTable::attrCache[RELCAT_RELID] = nullptr;
+
+    struct AttrCacheEntry* dummy2 = AttrCacheTable::attrCache[ATTRCAT_RELID];
+    while(dummy2 != nullptr){
+        struct AttrCacheEntry* temp = dummy2;
+        dummy2 = dummy2->next;
+        free(temp);
+    }
+    AttrCacheTable::attrCache[ATTRCAT_RELID] = nullptr;
 }

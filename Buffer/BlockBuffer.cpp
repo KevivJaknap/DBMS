@@ -262,6 +262,21 @@ int RecBuffer::setSlotMap(unsigned char *slotMap){
 
     return SUCCESS;
 }
+
+void BlockBuffer::releaseBlock(){
+    if(this->blockNum != INVALID_BLOCKNUM){
+        //get buffer number
+        int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
+
+        if(bufferNum != E_BLOCKNOTINBUFFER){
+            //set free bit
+            StaticBuffer::metainfo[bufferNum].free = true;
+            
+            StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
+        }
+    }
+    this->blockNum = INVALID_BLOCKNUM;
+}
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType){
     if(attrType == NUMBER){
         return attr1.nVal - attr2.nVal;

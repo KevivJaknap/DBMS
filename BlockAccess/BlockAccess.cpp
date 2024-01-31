@@ -329,3 +329,140 @@ int BlockAccess::insert(int relId, Attribute *record) {
 
     return SUCCESS;
 }
+
+int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op){
+    RecId recId;
+
+    recId = linearSearch(relId, attrName, attrVal, op);
+
+    if(recId.block == -1){
+        return E_NOTFOUND;
+    }
+
+    RecBuffer recBuffer(recId.block);
+    recBuffer.getRecord(record, recId.slot);
+
+    return SUCCESS;
+}
+
+int BlockAccess::deleteRelation(char relName[ATTR_SIZE]){
+    //check
+    bool check = !strcmp(relName, RELCAT_RELNAME) || !strcmp(relName, ATTRCAT_RELNAME);
+    if(check){
+        return E_NOTPERMITTED;
+    }
+
+    //reset searchIndex of relation catalog
+    RelCacheTable::resetSearchIndex(RELCAT_RELID);
+
+    Attribute relNameAttr;
+    strcpy(relNameAttr.sVal, relName);
+
+    //check if relation exists
+    RecId recId = linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameAttr, EQ);
+    if(recId.block == -1){
+        return E_RELNOTEXIST;
+    }
+
+    Attribute relCatEntryRecord[RELCAT_NO_ATTRS];
+    RecBuffer recBuffer(recId.block);
+    int retVal = recBuffer.getRecord(relCatEntryRecord, recId.slot);
+    if(retVal != SUCCESS){
+        return retVal;
+    }
+
+    //get number of attributes
+    int numAttrs = relCatEntryRecord[RELCAT_NO_ATTRIBUTES_INDEX].nVal;
+    //get first block
+    int firstBlock = relCatEntryRecord[RELCAT_FIRST_BLOCK_INDEX].nVal;
+
+    int currBlock = firstBlock;
+    int nextBlock = -1;
+    while(currBlock != -1){
+        RecBuffer recBuffer2(currBlock);
+        struct HeadInfo head;
+        retVal = recBuffer2.getHeader(&head);
+        if(retVal != SUCCESS){
+            return retVal;
+        }
+        currBlock = head.rblock;
+        recBuffer2.releaseBlock();
+    }
+    //reset search index of attribute catalog
+    RelCacheTable::resetSearchIndex(ATTRCAT_RELID);
+    int numberOfAttributesDeleted = 0;
+
+    while(true) {
+        RecId attrCatRecId = linearSearch(ATTRCAT_RELID, ATTRCAT_ATTR_RELNAME, relNameAttr, EQ);
+        if(attrCatRecId.block == -1){
+            break;
+        }
+        numberOfAttributesDeleted++;
+        RecBuffer attrCatBuffer(attrCatRecId.block);
+        struct HeadInfo head;
+        retVal = attrCatBuffer.getHeader(&head);
+        if(retVal != SUCCESS){
+            return retVal;
+        }
+        Attribute attrCatEntryRecord[ATTRCAT_NO_ATTRS];
+        attrCatBuffer.getRecord(attrCatEntryRecord, attrCatRecId.slot);
+
+        //updating slotmap
+        unsigned char slotMap[head.numSlots];
+        retVal = attrCatBuffer.getSlotMap(slotMap);
+        if(retVal != SUCCESS){
+            return retVal;
+        }
+        slotMap[attrCatRecId.slot] = SLOT_UNOCCUPIED;
+        retVal = attrCatBuffer.setSlotMap(slotMap);
+        if(retVal != SUCCESS){
+            return retVal;
+        }
+
+
+        int rootBlock = attrCatEntryRecord[ATTRCAT_ROOT_BLOCK_INDEX].nVal;
+        
+
+        //decrement the number of entries
+        head.numEntries--;
+        retVal = attrCatBuffer.setHeader(&head);
+        if(retVal != SUCCESS){
+            return retVal;
+        }
+
+        if(head.numEntries == 0){
+            RecBuffer prevBuffer(head.lblock);
+            struct HeadInfo prevHead;
+            retVal = prevBuffer.getHeader(&prevHead);
+            if(retVal != SUCCESS){
+                return retVal;
+            }
+            prevHead.rblock = head.rblock;
+            retVal = prevBuffer.setHeader(&prevHead);
+            if(retVal != SUCCESS){
+                return retVal;
+            }
+            if(head.rblock != -1){
+                RecBuffer nextBuffer(head.rblock);
+                struct HeadInfo nextHead;
+                retVal = nextBuffer.getHeader(&nextHead);
+                if(retVal != SUCCESS){
+                    return retVal;
+                }
+                nextHead.lblock = head.lblock;
+                retVal = nextBuffer.setHeader(&nextHead);
+                if(retVal != SUCCESS){
+                    return retVal;
+                }
+            }
+            else{
+                relCatEntryRecord[RELCAT_LAST_BLOCK_INDEX].nVal = head.lblock;
+            }
+            attrCatBuffer.releaseBlock();
+        }
+        if (rootBlock != -1){
+            BPlusTree::bPlusDestroy(rootBlock);
+        }
+    }
+    
+}
