@@ -205,7 +205,7 @@ int OpenRelTable::closeRel(int relId){
 
 int OpenRelTable::getRelId(char relName[ATTR_SIZE]){
     for(int i=0; i < MAX_OPEN; i++){
-        if(!strcmp(tableMetaInfo[i].relName, relName)){
+        if(!strcmp(tableMetaInfo[i].relName, relName) && !tableMetaInfo[i].free){
             return i;
         }
     }

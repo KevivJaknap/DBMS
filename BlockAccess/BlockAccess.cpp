@@ -462,7 +462,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]){
             attrCatBuffer.releaseBlock();
         }
         if (rootBlock != -1){
-            BPlusTree::bPlusDestroy(rootBlock);
+            // BPlusTree::bPlusDestroy(rootBlock);
         }
     }
     /* deleting the entry in relation catalog */
