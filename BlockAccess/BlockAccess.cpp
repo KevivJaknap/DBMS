@@ -457,6 +457,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]){
             }
             else{
                 relCatEntryRecord[RELCAT_LAST_BLOCK_INDEX].nVal = head.lblock;
+                recBuffer.setRecord(relCatEntryRecord, recId.slot);
             }
             attrCatBuffer.releaseBlock();
         }
@@ -464,5 +465,38 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]){
             BPlusTree::bPlusDestroy(rootBlock);
         }
     }
-    
+    /* deleting the entry in relation catalog */
+    struct HeadInfo relCatHead;
+    retVal = recBuffer.getHeader(&relCatHead);
+    if(retVal != SUCCESS){
+        return retVal;
+    }
+    relCatHead.numEntries--;
+    retVal = recBuffer.setHeader(&relCatHead);
+    if(retVal != SUCCESS){
+        return retVal;
+    }
+
+    //updating slotmap
+    unsigned char slotMap[relCatHead.numSlots];
+    retVal = recBuffer.getSlotMap(slotMap);
+    if(retVal != SUCCESS){
+        return retVal;
+    }
+    slotMap[recId.slot] = SLOT_UNOCCUPIED;
+    retVal = recBuffer.setSlotMap(slotMap);
+
+    /* updating relCacheTable of relation catalog */
+    RelCatEntry relCatEntryrelCat;
+    RelCacheTable::getRelCatEntry(RELCAT_RELID, &relCatEntryrelCat);
+    relCatEntryrelCat.numRecs--;
+    RelCacheTable::setRelCatEntry(RELCAT_RELID, &relCatEntryrelCat);
+
+    /* updating relCacheTable of attribute catalog */
+    RelCatEntry relCatEntryattrCat;
+    RelCacheTable::getRelCatEntry(ATTRCAT_RELID, &relCatEntryattrCat);
+    relCatEntryattrCat.numRecs -= numberOfAttributesDeleted;
+    RelCacheTable::setRelCatEntry(ATTRCAT_RELID, &relCatEntryattrCat);
+
+    return SUCCESS;
 }
