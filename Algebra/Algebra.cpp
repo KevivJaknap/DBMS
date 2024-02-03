@@ -46,7 +46,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
     while (true) {
         RecId searchRes = BlockAccess::linearSearch(srcRelId, attr, attrVal, op);
-        // printf("SearchRes block %d slot %d\n", searchRes.block, searchRes.slot);
+        printf("SearchRes block %d slot %d\n", searchRes.block, searchRes.slot);
         if(searchRes.block != -1 && searchRes.slot != -1){
             Attribute rec[relCatEntry.numAttrs];
             RecBuffer recBuffer(searchRes.block);
@@ -82,11 +82,11 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
     }
 
     //get relation catalog entry of the relation
-    RelCatEntry* relCatEntry = (RelCatEntry*)malloc(sizeof(RelCatEntry));
-    RelCacheTable::getRelCatEntry(relId, relCatEntry);
+    RelCatEntry relCatEntry;
+    RelCacheTable::getRelCatEntry(relId, &relCatEntry);
 
     //check if number of attributes match
-    if(relCatEntry->numAttrs != nAttrs){
+    if(nAttrs != relCatEntry.numAttrs){
         return E_NATTRMISMATCH;
     }
 
@@ -95,10 +95,10 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
 
     //get attribute catalog entry of each attribute for type
     for(int i=0; i<nAttrs; i++){
-        AttrCatEntry* attrCatEntry = (AttrCatEntry*)malloc(sizeof(AttrCatEntry));
-        AttrCacheTable::getAttrCatEntry(relId, i, attrCatEntry);
+        AttrCatEntry attrCatEntry;
+        AttrCacheTable::getAttrCatEntry(relId, i, &attrCatEntry);
         
-        int type = attrCatEntry->attrType;
+        int type = attrCatEntry.attrType;
 
         if(type == NUMBER){
             //check if record[i] can be converted to number
@@ -108,9 +108,11 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
             else{
                 return E_ATTRTYPEMISMATCH;
             }
+            printf(" %.2f |", recordAttr[i].nVal);
         }
         else if(type == STRING){
             strcpy(recordAttr[i].sVal, record[i]);
+            printf(" %s |", recordAttr[i].sVal);
         }
     }
 

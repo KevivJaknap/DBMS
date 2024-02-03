@@ -39,7 +39,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
        unsigned char slotMap[numSlots];
        recBuffer.getSlotMap(slotMap);
 
-       if(slot > numSlots){
+       if(slot >= numSlots){
         block = head.rblock;
         slot=0;
         continue;
@@ -259,8 +259,8 @@ int BlockAccess::insert(int relId, Attribute *record) {
         }
 
         // getting new record block
-        RecBuffer recBuffer;
-        int ret = recBuffer.getBlockNum();
+        RecBuffer newRecBuffer;
+        int ret = newRecBuffer.getBlockNum();
         if (ret == E_DISKFULL){
             return E_DISKFULL;
         }
@@ -278,7 +278,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
         head.numSlots = numOfSlots;
         head.numAttrs = numOfAttributes;
 
-        recBuffer.setHeader(&head);
+        newRecBuffer.setHeader(&head);
 
         //set slotMap as unoccupied for all slots
         unsigned char slotMap[numOfSlots];
@@ -286,7 +286,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
             slotMap[i] = SLOT_UNOCCUPIED;
         }
         //set slotMap
-        recBuffer.setSlotMap(slotMap);
+        newRecBuffer.setSlotMap(slotMap);
 
         if (!empty) {
             // set rblock of previous to new block
@@ -305,7 +305,6 @@ int BlockAccess::insert(int relId, Attribute *record) {
         //update last block field
         relCatEntry.lastBlk = recId.block;
         RelCacheTable::setRelCatEntry(relId, &relCatEntry);
-
     }
 
     RecBuffer recBuffer(recId.block);
