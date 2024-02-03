@@ -518,7 +518,7 @@ int BlockAccess::project(int relId, Attribute* record){
     }
     else{
         block = prevRecId.block;
-        slot = prevRecId.slot;
+        slot = prevRecId.slot+1;
     }
 
     while (block != -1){
@@ -532,7 +532,7 @@ int BlockAccess::project(int relId, Attribute* record){
         unsigned char slotMap[head.numSlots];
         recBuffer.getSlotMap(slotMap);
 
-        if(slot > head.numSlots){
+        if(slot >= head.numSlots){
             block = head.rblock;
             slot = 0;
         }

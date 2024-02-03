@@ -55,7 +55,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         return targetRelId;
     }
 
-    int ret = RelCacheTable::resetSearchIndex(srcRelId);
+    ret = RelCacheTable::resetSearchIndex(srcRelId);
     if (ret != SUCCESS){
         return ret;
     }
@@ -215,8 +215,23 @@ int Algebra::project(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], int tar_
     while(BlockAccess::project(srcRelId, record) == SUCCESS){
         Attribute proj_record[tar_nAttrs];
         for (int i=0; i<tar_nAttrs; i++){
-            proj_record[i] = record[attr_offset[i]];
+            if(attr_types[i] == NUMBER){
+                proj_record[i].nVal = record[attr_offset[i]].nVal;
+            }
+            else if(attr_types[i] == STRING){
+                strcpy(proj_record[i].sVal, record[attr_offset[i]].sVal);
+            }
         }
+        // printf("Inserting record ");
+        // for(int i=0; i<tar_nAttrs; i++){
+        //     if(attr_types[i] == NUMBER){
+        //         printf(" %.2f |", proj_record[i].nVal);
+        //     }
+        //     else if(attr_types[i] == STRING){
+        //         printf(" %s |", proj_record[i].sVal);
+        //     }
+        // }
+        // printf("\n");
         ret = BlockAccess::insert(targetRelId, proj_record);
         if (ret != SUCCESS){
             Schema::closeRel(targetRel);
