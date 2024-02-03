@@ -8,7 +8,19 @@ BlockBuffer::BlockBuffer(int blockNum) {
 }
 
 BlockBuffer::BlockBuffer(char blockType){
-    int blockNum = getFreeBlock(blockType);
+    int bType;
+    switch (blockType) {
+        case 'R':
+            bType = REC;
+            break;
+        case 'I':
+            bType = IND_INTERNAL;
+            break;
+        case 'L':
+            bType = IND_LEAF;
+            break;
+    }
+    int blockNum = getFreeBlock(bType);
 
     this->blockNum = blockNum;
 }

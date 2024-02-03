@@ -39,7 +39,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
        unsigned char slotMap[numSlots];
        recBuffer.getSlotMap(slotMap);
 
-       if(slot > numSlots){
+       if(slot >= numSlots){
         block = head.rblock;
         slot=0;
         continue;
