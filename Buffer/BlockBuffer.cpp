@@ -283,9 +283,8 @@ void BlockBuffer::releaseBlock(){
         if(bufferNum != E_BLOCKNOTINBUFFER){
             //set free bit
             StaticBuffer::metainfo[bufferNum].free = true;
-            
-            StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
         }
+        StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
     }
     this->blockNum = INVALID_BLOCKNUM;
 }
