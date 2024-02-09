@@ -456,8 +456,10 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]){
                 }
             }
             else{
-                relCatEntryRecord[RELCAT_LAST_BLOCK_INDEX].nVal = head.lblock;
-                recBuffer.setRecord(relCatEntryRecord, recId.slot);
+                RelCatEntry attrCatrelEntry;
+                RelCacheTable::getRelCatEntry(ATTRCAT_RELID, &attrCatrelEntry);
+                attrCatrelEntry.lastBlk = head.lblock;
+                RelCacheTable::setRelCatEntry(ATTRCAT_RELID, &attrCatrelEntry);
             }
             attrCatBuffer.releaseBlock();
         }
