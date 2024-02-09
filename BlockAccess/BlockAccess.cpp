@@ -333,12 +333,23 @@ int BlockAccess::insert(int relId, Attribute *record) {
 int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op){
     RecId recId;
 
-    recId = linearSearch(relId, attrName, attrVal, op);
+    AttrCatEntry attrCatEntry;
+    int ret = AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
+    if(ret != SUCCESS){
+        return ret;
+    }
+
+    int rootBlock = attrCatEntry.rootBlock;
+    if(rootBlock == -1){
+        recId = linearSearch(relId, attrName, attrVal, op);
+    }
+    else{
+        recId = BPlusTree::bPlusSearch(relId, attrName, attrVal, op);
+    }
 
     if(recId.block == -1){
         return E_NOTFOUND;
     }
-
     RecBuffer recBuffer(recId.block);
     recBuffer.getRecord(record, recId.slot);
 

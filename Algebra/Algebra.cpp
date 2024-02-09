@@ -55,14 +55,18 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         return targetRelId;
     }
 
+    //resetting the search index
     ret = RelCacheTable::resetSearchIndex(srcRelId);
     if (ret != SUCCESS){
         return ret;
     }
+    ret = AttrCacheTable::resetSearchIndex(srcRelId, attr);
+    if (ret != SUCCESS){
+        return ret;
+    }
 
-    Attribute record[src_nAttrs];
-    //resetting the search index in attrCacheTable for index
     
+    Attribute record[src_nAttrs];
     while(BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS){
         ret = BlockAccess::insert(targetRelId, record);
 

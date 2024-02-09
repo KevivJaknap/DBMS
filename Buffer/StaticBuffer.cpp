@@ -94,6 +94,15 @@ int StaticBuffer::getBufferNum(int blockNum) {
     return E_BLOCKNOTINBUFFER;
 }
 
+int StaticBuffer::getStaticBlockType(int blockNum){
+    if(blockNum < 0 || blockNum >= DISK_BLOCKS){
+        return E_OUTOFBOUND;
+    }
+
+    unsigned char blockType = blockAllocMap[blockNum];
+    return (int)blockType;
+}
+
 int StaticBuffer::setDirtyBit(int blockNum){
     int bufferIndex = getBufferNum(blockNum);
 

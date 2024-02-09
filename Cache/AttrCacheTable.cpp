@@ -44,3 +44,101 @@ int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
     }
     return E_ATTRNOTEXIST;
 }
+
+int AttrCacheTable::getSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId* searchIndex){
+    if(relId < 0 || relId >= MAX_OPEN){
+        return E_OUTOFBOUND;
+    }
+    if(attrCache[relId] == nullptr){
+        return E_RELNOTOPEN;
+    }
+    for(AttrCacheEntry* entry = attrCache[relId]; entry != nullptr; entry=entry->next){
+        if(!strcmp(entry->attrCatEntry.attrName, attrName)){
+            *searchIndex = entry->searchIndex;
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+}
+
+int AttrCacheTable::getSearchIndex(int relId, int attrOffset, IndexId* searchIndex){
+    if(relId < 0 || relId >= MAX_OPEN){
+        return E_OUTOFBOUND;
+    }
+    if(attrCache[relId] == nullptr){
+        return E_RELNOTOPEN;
+    }
+    for(AttrCacheEntry* entry = attrCache[relId]; entry != nullptr; entry=entry->next){
+        if(entry->attrCatEntry.offset == attrOffset){
+            *searchIndex = entry->searchIndex;
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+}
+
+int AttrCacheTable::setSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId* searchIndex){
+    if(relId < 0 || relId >= MAX_OPEN){
+        return E_OUTOFBOUND;
+    }
+    if(attrCache[relId] == nullptr){
+        return E_RELNOTOPEN;
+    }
+    for(AttrCacheEntry* entry = attrCache[relId]; entry != nullptr; entry=entry->next){
+        if(!strcmp(entry->attrCatEntry.attrName, attrName)){
+            entry->searchIndex = *searchIndex;
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+}
+
+int AttrCacheTable::setSearchIndex(int relId, int attrOffset, IndexId* searchIndex){
+    if(relId < 0 || relId >= MAX_OPEN){
+        return E_OUTOFBOUND;
+    }
+    if(attrCache[relId] == nullptr){
+        return E_RELNOTOPEN;
+    }
+    for(AttrCacheEntry* entry = attrCache[relId]; entry != nullptr; entry=entry->next){
+        if(entry->attrCatEntry.offset == attrOffset){
+            entry->searchIndex = *searchIndex;
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+}
+
+int AttrCacheTable::resetSearchIndex(int relId, char attrName[ATTR_SIZE]){
+    if(relId < 0 || relId >= MAX_OPEN){
+        return E_OUTOFBOUND;
+    }
+    if(attrCache[relId] == nullptr){
+        return E_RELNOTOPEN;
+    }
+    for(AttrCacheEntry* entry = attrCache[relId]; entry != nullptr; entry=entry->next){
+        if(!strcmp(entry->attrCatEntry.attrName, attrName)){
+            entry->searchIndex.block = -1;
+            entry->searchIndex.index = -1;
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+}
+
+int AttrCacheTable::resetSearchIndex(int relId, int attrOffset){
+    if(relId < 0 || relId >= MAX_OPEN){
+        return E_OUTOFBOUND;
+    }
+    if(attrCache[relId] == nullptr){
+        return E_RELNOTOPEN;
+    }
+    for(AttrCacheEntry* entry = attrCache[relId]; entry != nullptr; entry=entry->next){
+        if(entry->attrCatEntry.offset == attrOffset){
+            entry->searchIndex.block = -1;
+            entry->searchIndex.index = -1;
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+}
