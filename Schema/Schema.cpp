@@ -69,7 +69,8 @@ int Schema::createRel(char relName[ATTR_SIZE], int nAttrs, char attrs[][ATTR_SIZ
     RecId targetRecId;
     RelCacheTable::resetSearchIndex(RELCAT_RELID);
     //search for the relation in relation catalog
-    targetRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameAsAttr, EQ);
+    int x;
+    targetRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameAsAttr, EQ, x);
 
     if(targetRecId.block != -1){
         return E_RELEXIST;

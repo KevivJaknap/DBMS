@@ -92,7 +92,8 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE]){
     //blockid and slot of relName in relation Catalog
     union Attribute relNameattr;
     strcpy(relNameattr.sVal, relName);
-    RecId relcatRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameattr, EQ);
+    int x;
+    RecId relcatRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameattr, EQ, x);
     
     if(relcatRecId.block == -1 && relcatRecId.slot == -1){
         return E_RELNOTEXIST;
@@ -125,7 +126,8 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE]){
     strcpy(attrCatrelName.sVal, relName);
 
     while(true){
-        RecId attrcatRecId = BlockAccess::linearSearch(ATTRCAT_RELID, ATTRCAT_ATTR_RELNAME, attrCatrelName, EQ);
+        int x;
+        RecId attrcatRecId = BlockAccess::linearSearch(ATTRCAT_RELID, ATTRCAT_ATTR_RELNAME, attrCatrelName, EQ, x);
         if(attrcatRecId.block == -1 && attrcatRecId.slot == -1){
             break;
         }
@@ -172,7 +174,8 @@ int OpenRelTable::closeRel(int relId){
         RelCacheTable::resetSearchIndex(RELCAT_RELID);
         union Attribute relNameattr;
         strcpy(relNameattr.sVal, relCatEntry.relName);
-        RecId relcatRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameattr, EQ);
+        int x;
+        RecId relcatRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, relNameattr, EQ, x);
         if(relcatRecId.block == -1 && relcatRecId.slot == -1){
             return E_RELNOTEXIST;
         }
