@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
 BlockBuffer::BlockBuffer(int blockNum) {
     this->blockNum = blockNum;
@@ -217,11 +218,19 @@ int BlockBuffer::setBlockType(int blockType){
 int BlockBuffer::getFreeBlock(int blockType){
     int blockNum = -1;
     //iterate through blockAllocMap to find free block
+    // printf("Getting Free Block\n");
     for(int i=0; i<DISK_BLOCKS; i++){
         if(StaticBuffer::blockAllocMap[i] == UNUSED_BLK){
+            // printf("Block %d is free\n", i);
             blockNum = i;
             break;
         }
+        // comment this part (debug)
+        // else{
+        //     int allocation = StaticBuffer::blockAllocMap[i];
+        //     printf("Block %d is allocated to %d\n", i, allocation);
+        // }
+        // upto here
     }
 
     //if no block is free, return E_DISKFULL
