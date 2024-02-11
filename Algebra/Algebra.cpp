@@ -67,7 +67,8 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
     
     Attribute record[src_nAttrs];
-    while(BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS){
+    int comps = 0;
+    while(BlockAccess::search(srcRelId, record, attr, attrVal, op, comps) == SUCCESS){
         ret = BlockAccess::insert(targetRelId, record);
 
         if (ret != SUCCESS){
@@ -76,6 +77,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             return ret;
         }
     }
+    printf("The number of comparisons made is %d\n", comps);
 
     ret = Schema::closeRel(targetRel);
     if (ret != SUCCESS){

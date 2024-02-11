@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op){
+RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op, int &comps){
     //declare searchIndex used to store index of search result
     IndexId searchIndex;
 
@@ -60,9 +60,15 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             for(int i=0; i<intHead.numEntries; i++){
                 int ret = internalBlk.getEntry(&intEntry, i);
                 bool EQorGE = (op == EQ || op == GE);
+                if(EQorGE){
+                    comps++;
+                }
                 if(EQorGE && compareAttrs(intEntry.attrVal, attrVal, attrCatEntry.attrType) >= 0){
                     found = true;
                     break;
+                }
+                if(op == GT){
+                    comps++;
                 }
                 if(op == GT && compareAttrs(intEntry.attrVal, attrVal, attrCatEntry.attrType) > 0){
                     found = true;
@@ -90,7 +96,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             int ret = leafBlk.getEntry(&leafEntry, index);
             
             int cmpVal = compareAttrs(leafEntry.attrVal, attrVal, attrCatEntry.attrType);
-
+            comps++;
             if(
                 (op == EQ && cmpVal == 0) ||
                 (op == LT && cmpVal < 0) ||
