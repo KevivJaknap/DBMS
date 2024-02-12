@@ -50,13 +50,13 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
         continue;
        }
        //get AttrCatEntry
-       AttrCatEntry* attrCatBuf = (AttrCatEntry*)malloc(sizeof(AttrCatEntry));
-       AttrCacheTable::getAttrCatEntry(relId, attrName, attrCatBuf);
+       AttrCatEntry attrCatBuf;
+       AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatBuf);
        //get offset and value of attribute
-       int offset = attrCatBuf->offset;
+       int offset = attrCatBuf.offset;
        union Attribute value = rec[offset];
 
-       int cmpVal = compareAttrs(value, attrVal, attrCatBuf->attrType);
+       int cmpVal = compareAttrs(value, attrVal, attrCatBuf.attrType);
 
        if (
         (op == NE && cmpVal != 0) ||

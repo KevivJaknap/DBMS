@@ -160,10 +160,45 @@ int OpenRelTable::closeRel(int relId){
         return E_RELNOTOPEN;
     }
     
+    //Free the attribute catalog entries
+    //first we iterate through the linked list
+    //for each of the attribute cache entries, we see if it is dirty
+    //if it is dirty, we search for recId in attribute catalog for numOfAttributes times
+    //for each hit, we set the record to a temporary Record and see if the name of the attribute matches
+    //if it does, we set the record to the new record and break
+    int numOfAttributes = RelCacheTable::relCache[relId]->relCatEntry.numAttrs;
+    AttrCacheEntry* attrCacheEntry = AttrCacheTable::attrCache[relId];
+    for(AttrCacheEntry* entry = attrCacheEntry; entry != nullptr; entry=entry->next){
+        if(entry->dirty){
+            //get attribute catalog entry
+            AttrCatEntry attrCatEntry = entry->attrCatEntry;
+            //initialize record
+            union Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+            AttrCacheTable::attrCatEntryToRecord(&attrCatEntry, attrCatRecord);
+
+            //perform linear search to find the record in attribute catalog
+            RelCacheTable::resetSearchIndex(ATTRCAT_RELID);
+            union Attribute relNameattr;
+            strcpy(relNameattr.sVal, attrCatEntry.relName);
+
+            //search for the block, slot in attribute catalog
+            for(int i=0; i<numOfAttributes; i++){
+                RecId attrCatRecId = BlockAccess::linearSearch(ATTRCAT_RELID, ATTRCAT_ATTR_RELNAME, relNameattr, EQ);
+                RecBuffer attrCatBlock(attrCatRecId.block);
+                union Attribute tempRecord[ATTRCAT_NO_ATTRS];
+                attrCatBlock.getRecord(tempRecord, attrCatRecId.slot);
+                if(!strcmp(tempRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrCatEntry.attrName)){
+                    attrCatBlock.setRecord(attrCatRecord, attrCatRecId.slot);
+                    break;
+                }
+            }
+        }
+    }
     //check if modified
     if(RelCacheTable::relCache[relId]->dirty){
         //get relation catalog entry
         RelCatEntry relCatEntry = RelCacheTable::relCache[relId]->relCatEntry;
+        numOfAttributes = relCatEntry.numAttrs;
         //initialize record
         union Attribute relCatRecord[RELCAT_NO_ATTRS];
         RelCacheTable::relCatEntryToRecord(&relCatEntry, relCatRecord);
@@ -188,17 +223,15 @@ int OpenRelTable::closeRel(int relId){
     free(RelCacheTable::relCache[relId]);
     RelCacheTable::relCache[relId] = nullptr;
 
-    //free the attrCacheEntry
+    // free the attrCacheEntry
     struct AttrCacheEntry* dummy = AttrCacheTable::attrCache[relId];
     while(dummy != nullptr){
         struct AttrCacheEntry* temp = dummy;
         dummy = dummy->next;
         free(temp);
     }
-
     AttrCacheTable::attrCache[relId] = nullptr;
 
-    //set openRelTable entry to free
     OpenRelTable::tableMetaInfo[relId].free = true;
     return SUCCESS;
 }
