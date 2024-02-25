@@ -327,7 +327,23 @@ int BlockAccess::insert(int relId, Attribute *record) {
     relCatEntry.numRecs++;
     RelCacheTable::setRelCatEntry(relId, &relCatEntry);
 
-    return SUCCESS;
+    int flag = SUCCESS;
+
+    for(int attrOffset = 0; attrOffset < numOfAttributes; attrOffset++){
+        AttrCatEntry attrCatEntry;
+        int ret = AttrCacheTable::getAttrCatEntry(relId, attrOffset, &attrCatEntry);
+        if(ret != SUCCESS){
+            return ret;
+        }
+        int rootBlk = attrCatEntry.rootBlock;
+        if(rootBlk != -1){
+            ret = BPlusTree::bPlusInsert(relId, attrCatEntry.attrName, record[attrOffset], recId);
+            if(ret == E_DISKFULL){
+                flag = E_INDEX_BLOCKS_RELEASED;
+            }
+        }
+    }
+    return flag;
 }
 
 int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op){
@@ -475,7 +491,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]){
             attrCatBuffer.releaseBlock();
         }
         if (rootBlock != -1){
-            // BPlusTree::bPlusDestroy(rootBlock);
+            BPlusTree::bPlusDestroy(rootBlock);
         }
     }
     /* deleting the entry in relation catalog */
