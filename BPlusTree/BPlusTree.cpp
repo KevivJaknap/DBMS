@@ -244,7 +244,7 @@ int BPlusTree::bPlusInsert(int relId, char attrName[ATTR_SIZE], Attribute attrVa
     leafEntry.slot = recId.slot;
     leafEntry.attrVal = attrVal;
     
-    int ret = insertIntoLeaf(relId, attrName, leafBlkNum, leafEntry);
+    ret = insertIntoLeaf(relId, attrName, leafBlkNum, leafEntry);
     if(ret == E_DISKFULL){
         //destroy the B+ tree
         ret = bPlusDestroy(rootBlock);
@@ -446,7 +446,7 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int block
         return SUCCESS;
     }
 
-    int newRightBlk = splitInternal(blockNum, internalEntries);
+    int newRightBlk = BPlusTree::splitInternal(blockNum, internalEntries);
 
     if(newRightBlk == E_DISKFULL){
         bPlusDestroy(internalEntry.rChild);
@@ -520,4 +520,57 @@ int BPlusTree::createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attr
         return ret;
     }
     return SUCCESS;
+}
+
+int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]){
+    IndInternal rightBlk;
+
+    IndInternal leftBlk(intBlockNum);
+
+    int rightBlkNum = rightBlk.getBlockNum();
+    int leftBlkNum = leftBlk.getBlockNum();
+
+    if(rightBlkNum == E_DISKFULL){
+        return E_DISKFULL;
+    }
+
+    HeadInfo leftBlkHeader, rightBlkHeader;
+    leftBlk.getHeader(&leftBlkHeader);
+    rightBlk.getHeader(&rightBlkHeader);
+
+    rightBlkHeader.numEntries = (MAX_KEYS_INTERNAL)/2; //50
+    rightBlkHeader.pblock = leftBlkHeader.pblock;
+
+    rightBlk.setHeader(&rightBlkHeader);
+
+    leftBlkHeader.numEntries = (MAX_KEYS_INTERNAL)/2; //50
+    leftBlk.setHeader(&leftBlkHeader);
+
+    for(int i=0; i<leftBlkHeader.numEntries; i++){
+        leftBlk.setEntry(&internalEntries[i], i);
+    }
+
+    for(int i=0; i<rightBlkHeader.numEntries; i++){
+        rightBlk.setEntry(&internalEntries[i+leftBlkHeader.numEntries], i);
+    }
+
+    int type = StaticBuffer::getStaticBlockType(internalEntries[0].lChild);
+
+    //change pblock of lChild of first entry
+    int lChildBlockNum = internalEntries[leftBlkHeader.numEntries].lChild;
+    BlockBuffer lChildBlk(lChildBlockNum);
+    HeadInfo lChildHead;
+    lChildBlk.getHeader(&lChildHead);
+    lChildHead.pblock = rightBlkNum;
+    lChildBlk.setHeader(&lChildHead);
+
+    //for each entry in right block, change the pblock of rChild
+    for(int i=0; i<rightBlkHeader.numEntries; i++){
+        BlockBuffer rChildBlk(internalEntries[i+leftBlkHeader.numEntries].rChild);
+        HeadInfo rChildHead;
+        rChildBlk.getHeader(&rChildHead);
+        rChildHead.pblock = rightBlkNum;
+        rChildBlk.setHeader(&rChildHead);
+    }
+    return rightBlkNum;
 }
