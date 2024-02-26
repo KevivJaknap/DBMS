@@ -57,6 +57,8 @@ int BlockBuffer::getHeader(struct HeadInfo *head){
     memcpy(&head->numAttrs, bufferPtr+20, 4);
     memcpy(&head->rblock, bufferPtr+12, 4);
     memcpy(&head->lblock, bufferPtr+8, 4);
+    memcpy(&head->blockType, bufferPtr, 4);
+    memcpy(&head->pblock, bufferPtr+4, 4);
 
     return SUCCESS;
 }
@@ -309,17 +311,18 @@ void BlockBuffer::releaseBlock(){
     }
     this->blockNum = INVALID_BLOCKNUM;
 }
-int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType){
-    if(attrType == NUMBER){
-        return attr1.nVal - attr2.nVal;
-    }
-    else if(attrType == STRING){
+int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
+    if (attrType == NUMBER) {
+        if (attr1.nVal < attr2.nVal) return -1;
+        else if (attr1.nVal > attr2.nVal) return 1;
+        else return 0; // Equal
+    } else if (attrType == STRING) {
         return strcmp(attr1.sVal, attr2.sVal);
-    }
-    else{
+    } else {
         return E_ATTRTYPEMISMATCH;
     }
 }
+
 
 int IndInternal::getEntry(void *ptr, int indexNum){
     if(indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL){
