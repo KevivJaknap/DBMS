@@ -269,6 +269,13 @@ char attribute1[ATTR_SIZE], char attribute2[ATTR_SIZE]){
     if(srcRelId2 == E_RELNOTOPEN){
         return E_RELNOTOPEN;
     }
+    //getting RelCache entries
+    RelCatEntry relCatEntry1, relCatEntry2;
+    RelCacheTable::getRelCatEntry(srcRelId1, &relCatEntry1);
+    RelCacheTable::getRelCatEntry(srcRelId2, &relCatEntry2);
+
+    int numOfAttributes1 = relCatEntry1.numAttrs;
+    int numOfAttributes2 = relCatEntry2.numAttrs;
 
     //getting attribute catalog entries
     AttrCatEntry attrCatEntry1, attrCatEntry2;
@@ -288,14 +295,6 @@ char attribute1[ATTR_SIZE], char attribute2[ATTR_SIZE]){
     }
 
     
-    //getting RelCache entries
-    RelCatEntry relCatEntry1, relCatEntry2;
-    RelCacheTable::getRelCatEntry(srcRelId1, &relCatEntry1);
-    RelCacheTable::getRelCatEntry(srcRelId2, &relCatEntry2);
-
-    int numOfAttributes1 = relCatEntry1.numAttrs;
-    int numOfAttributes2 = relCatEntry2.numAttrs;
-
     //iterating through all the attributes of srcRelation1 and srcRelation2
     //and checking if the attribute names are same except for the attribute1 and attribute2
 
@@ -350,7 +349,7 @@ char attribute1[ATTR_SIZE], char attribute2[ATTR_SIZE]){
     }
 
     //create targetRelation using Schema
-    int ret = Schema::createRel(targetRelation, numOfAttributesInTarget, targetRelAttrNames, targetRelAttrTypes);
+    ret = Schema::createRel(targetRelation, numOfAttributesInTarget, targetRelAttrNames, targetRelAttrTypes);
     if(ret != SUCCESS){
         return ret;
     }
