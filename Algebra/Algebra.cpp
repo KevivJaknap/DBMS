@@ -218,11 +218,11 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
     }
 
     //get relation catalog entry of the relation
-    RelCatEntry* relCatEntry = (RelCatEntry*)malloc(sizeof(RelCatEntry));
-    RelCacheTable::getRelCatEntry(relId, relCatEntry);
+    RelCatEntry relCatEntry;
+    RelCacheTable::getRelCatEntry(relId, &relCatEntry);
 
     //check if number of attributes match
-    if(relCatEntry->numAttrs != nAttrs){
+    if(relCatEntry.numAttrs != nAttrs){
         return E_NATTRMISMATCH;
     }
 
@@ -231,10 +231,10 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
 
     //get attribute catalog entry of each attribute for type
     for(int i=0; i<nAttrs; i++){
-        AttrCatEntry* attrCatEntry = (AttrCatEntry*)malloc(sizeof(AttrCatEntry));
-        AttrCacheTable::getAttrCatEntry(relId, i, attrCatEntry);
+        AttrCatEntry attrCatEntry;
+        AttrCacheTable::getAttrCatEntry(relId, i, &attrCatEntry);
         
-        int type = attrCatEntry->attrType;
+        int type = attrCatEntry.attrType;
 
         if(type == NUMBER){
             //check if record[i] can be converted to number
