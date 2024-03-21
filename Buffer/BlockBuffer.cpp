@@ -305,7 +305,6 @@ void BlockBuffer::releaseBlock(){
     this->blockNum = INVALID_BLOCKNUM;
 }
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
-    RelCacheTable::comps++;
     if (attrType == NUMBER) {
         if (attr1.nVal < attr2.nVal) return -1;
         else if (attr1.nVal > attr2.nVal) return 1;

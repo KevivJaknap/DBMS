@@ -67,7 +67,6 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
     
     Attribute record[src_nAttrs];
-    RelCacheTable::comps = 0;
     while(BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS){
         ret = BlockAccess::insert(targetRelId, record);
 
@@ -77,7 +76,6 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             return ret;
         }
     }
-    printf("Total comparisons: %d\n", RelCacheTable::comps);
     ret = Schema::closeRel(targetRel);
     if (ret != SUCCESS){
         return ret;
