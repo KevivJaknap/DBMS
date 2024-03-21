@@ -4,7 +4,7 @@
 #include <cstdlib>
 
 RelCacheEntry* RelCacheTable::relCache[MAX_OPEN];
-
+int RelCacheTable::comps;
 int RelCacheTable::getRelCatEntry(int relId, RelCatEntry* relCatBuf){
     if (relId < 0 || relId >= MAX_OPEN) {
         return E_OUTOFBOUND;

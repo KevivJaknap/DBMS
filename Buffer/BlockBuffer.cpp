@@ -1,5 +1,5 @@
 #include "BlockBuffer.h"
-
+#include "../Cache/RelCacheTable.h"
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -223,16 +223,9 @@ int BlockBuffer::getFreeBlock(int blockType){
     // printf("Getting Free Block\n");
     for(int i=0; i<DISK_BLOCKS; i++){
         if(StaticBuffer::blockAllocMap[i] == UNUSED_BLK){
-            // printf("Block %d is free\n", i);
             blockNum = i;
             break;
         }
-        // comment this part (debug)
-        // else{
-        //     int allocation = StaticBuffer::blockAllocMap[i];
-        //     printf("Block %d is allocated to %d\n", i, allocation);
-        // }
-        // upto here
     }
 
     //if no block is free, return E_DISKFULL
@@ -312,6 +305,7 @@ void BlockBuffer::releaseBlock(){
     this->blockNum = INVALID_BLOCKNUM;
 }
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
+    RelCacheTable::comps++;
     if (attrType == NUMBER) {
         if (attr1.nVal < attr2.nVal) return -1;
         else if (attr1.nVal > attr2.nVal) return 1;

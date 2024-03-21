@@ -157,14 +157,12 @@ int BPlusTree::bPlusCreate(int relId, char attrName[ATTR_SIZE]){
     }
 
     int block = relCatEntry.firstBlk;
-
     while (block != -1){
         RecBuffer recBuffer(block);
 
         //load the slotMap
         unsigned char slotMap[relCatEntry.numSlotsPerBlk];
         recBuffer.getSlotMap(slotMap);
-
         for(int i=0; i<relCatEntry.numSlotsPerBlk; i++){
             if(slotMap[i] == SLOT_OCCUPIED){
                 Attribute record[relCatEntry.numAttrs];
@@ -177,6 +175,7 @@ int BPlusTree::bPlusCreate(int relId, char attrName[ATTR_SIZE]){
                 }
             }
         }
+
         HeadInfo headInfo;
         recBuffer.getHeader(&headInfo);
         block = headInfo.rblock;
@@ -391,6 +390,7 @@ int BPlusTree::splitLeaf(int leafBlockNum, Index indices[]){
     leftBlk.getHeader(&leftBlkHeader);
     rightBlk.getHeader(&rightBlkHeader);
 
+    int rightOfPrevLeft = leftBlkHeader.rblock;
     //set the header for right block
     rightBlkHeader.numEntries = (MAX_KEYS_LEAF+1)/2; //32
     rightBlkHeader.pblock = leftBlkHeader.pblock;
@@ -399,6 +399,14 @@ int BPlusTree::splitLeaf(int leafBlockNum, Index indices[]){
 
     //set the Header
     rightBlk.setHeader(&rightBlkHeader);
+
+    if(rightOfPrevLeft != -1){
+        IndLeaf rightOfPrevLeftBlk(rightOfPrevLeft);
+        HeadInfo rightOfPrevLeftHead;
+        rightOfPrevLeftBlk.getHeader(&rightOfPrevLeftHead);
+        rightOfPrevLeftHead.lblock = rightBlkNum;
+        rightOfPrevLeftBlk.setHeader(&rightOfPrevLeftHead);
+    }
 
     //set the header for left block
     leftBlkHeader.numEntries = (MAX_KEYS_LEAF+1)/2; //32
@@ -417,6 +425,9 @@ int BPlusTree::splitLeaf(int leafBlockNum, Index indices[]){
     for(int i=0; i<rightBlkHeader.numEntries; i++){
         rightBlk.setEntry(&indices[i+leftBlkHeader.numEntries], i);
     }
+    // printf("l %d, r %d, l's r %d, r's l %d, r's r %d\n", leftBlkNum, rightBlkNum, leftBlkHeader.rblock, rightBlkHeader.lblock, rightBlkHeader.rblock);
+    // printf("---------------------------------------");
+    // scanf("Enter something\n");
     return rightBlkNum;    
 }
 
@@ -575,20 +586,18 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]){
     rightBlk.setHeader(&rightBlkHeader);
 
     leftBlkHeader.numEntries = (MAX_KEYS_INTERNAL)/2; //50
+    leftBlkHeader.rblock = rightBlkNum;
     leftBlk.setHeader(&leftBlkHeader);
-
-    for(int i=0; i<leftBlkHeader.numEntries; i++){
+    
+    for(int i=0; i<MIDDLE_INDEX_INTERNAL; i++){
         leftBlk.setEntry(&internalEntries[i], i);
-    }
-
-    for(int i=0; i<rightBlkHeader.numEntries; i++){
-        rightBlk.setEntry(&internalEntries[i+leftBlkHeader.numEntries], i);
+        rightBlk.setEntry(&internalEntries[i+MIDDLE_INDEX_INTERNAL+1], i);
     }
 
     int type = StaticBuffer::getStaticBlockType(internalEntries[0].lChild);
 
     //change pblock of lChild of first entry
-    int lChildBlockNum = internalEntries[leftBlkHeader.numEntries].lChild;
+    int lChildBlockNum = internalEntries[MIDDLE_INDEX_INTERNAL+1].lChild;
     BlockBuffer lChildBlk(lChildBlockNum);
     HeadInfo lChildHead;
     lChildBlk.getHeader(&lChildHead);
@@ -596,8 +605,8 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[]){
     lChildBlk.setHeader(&lChildHead);
 
     //for each entry in right block, change the pblock of rChild
-    for(int i=0; i<rightBlkHeader.numEntries; i++){
-        BlockBuffer rChildBlk(internalEntries[i+leftBlkHeader.numEntries].rChild);
+    for(int i=0; i<MIDDLE_INDEX_INTERNAL; i++){
+        BlockBuffer rChildBlk(internalEntries[i+MIDDLE_INDEX_INTERNAL+1].rChild);
         HeadInfo rChildHead;
         rChildBlk.getHeader(&rChildHead);
         rChildHead.pblock = rightBlkNum;
