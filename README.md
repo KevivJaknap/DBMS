@@ -1,3 +1,2 @@
-# nitcbase
-
-The students will be implementing their code within this repository.
+# DBMS
+Object oriented method using C++
